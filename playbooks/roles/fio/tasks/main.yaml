@@ -33,16 +33,62 @@
         cmd: qmgmt -u {{ api_service }} tenant create {{ my_tenant }} 
       when: my_tenant not in my_tenant_test.stdout
 
-    - name: Test if volume {{ my_volume }} exists 
+    - name: Test if volume flashbench exists 
       shell:
-        cmd: qmgmt -u {{ api_service }} volume list | grep "^{{ my_volume }} " | awk '{print $1}'
+        cmd: qmgmt -u {{ api_service }} volume list | grep "^flashbench " | awk '{print $1}'
       register: my_volume_test
 
-    - name: Create Volume
+    - name: Create Volume flashbench
       shell:
-        cmd: qmgmt -u {{ api_service }} volume create {{ my_tenant }}/{{ my_volume }} user=root group=root configuration_name=noVolumeConfig
-      when: my_volume not in my_volume_test.stdout
-#    - name: Create Policy 
+        cmd: qmgmt -u {{ api_service }} volume create {{ my_tenant }}/flashbench user=root group=root configuration_name=noVolumeConfig
+      when: '"flashbench" not in my_volume_test.stdout'
+
+    - name: Test if volume hddbench exists 
+      shell:
+        cmd: qmgmt -u {{ api_service }} volume list | grep "^hddbench " | awk '{print $1}'
+      register: my_volume_test
+
+    - name: Create Volume hddbench
+      shell:
+        cmd: qmgmt -u {{ api_service }} volume create {{ my_tenant }}/hddbench user=root group=root configuration_name=noVolumeConfig
+      when: '"hddbench" not in my_volume_test.stdout'
+
+    - name: Test if policy "ssd_only" exists 
+      shell:
+        cmd: qmgmt -u {{ api_service }} policy-rule list | grep "ssd_only " | awk '{print $2}'
+      register: my_policy_test
+
+    - name: Write policy template 
+      template:
+        src: templates/policy-ssd_only.tpl
+        dest: "/tmp/policy_template.tpl"
+      when: '"ssd_only" not in my_policy_test.stdout'
+
+    - name: Create policy 
+      shell:
+        cmd: qmgmt -u {{ api_service }} policy-rule import /tmp/policy_template.tpl 
+      when: '"ssd_only" not in my_policy_test.stdout'
+
+    - name: Test if policy "hdd_only" exists 
+      shell:
+        cmd: qmgmt -u {{ api_service }} policy-rule list | grep "hdd_only " | awk '{print $2}'
+      register: my_policy_test
+
+    - name: Write policy template 
+      template:
+        src: templates/policy-hdd_only.tpl
+        dest: "/tmp/policy_template.tpl"
+      when: '"hdd_only" not in my_policy_test.stdout'
+
+    - name: Create policy 
+      shell:
+        cmd: qmgmt -u {{ api_service }} policy-rule import /tmp/policy_template.tpl 
+      when: '"hdd_only" not in my_policy_test.stdout'
+
+
+
+
+
 #    - name: Run Benchmarks on SSD
 #    - name: Run Benchmarks on HDD
 #    - name: Collect and Upload Data 
