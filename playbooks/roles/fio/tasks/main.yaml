@@ -1,0 +1,49 @@
+    - name: Install fio Debian packages
+      apt:
+        name: "{{ packages }}"
+        state: latest 
+        update_cache: yes
+      vars:
+        packages:
+        - fio
+      when: ansible_facts['os_family'] == "Debian"  
+
+    - name: Install fio RPM packages
+      yum: 
+        update_cache: yes
+        allow_downgrade: yes
+        state: latest 
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - fio 
+      when: ansible_facts['os_family'] == "RedHat" 
+
+    - name: get Quobyte session 
+      shell:
+        cmd: qmgmt -u {{ api_service }} user login {{ admin_user }} {{ admin_password }} 
+
+    - name: Test if tenant {{ my_tenant }} exists 
+      shell:
+        cmd: qmgmt -u {{ api_service }} tenant list | grep "^{{ my_tenant }} " | awk '{print $1}'
+      register: my_tenant_test
+
+    - name: Create Tenant 
+      shell:
+        cmd: qmgmt -u {{ api_service }} tenant create {{ my_tenant }} 
+      when: my_tenant not in my_tenant_test.stdout
+
+    - name: Test if volume {{ my_volume }} exists 
+      shell:
+        cmd: qmgmt -u {{ api_service }} volume list | grep "^{{ my_volume }} " | awk '{print $1}'
+      register: my_volume_test
+
+    - name: Create Volume
+      shell:
+        cmd: qmgmt -u {{ api_service }} volume create {{ my_tenant }}/{{ my_volume }} user=root group=root configuration_name=noVolumeConfig
+      when: my_volume not in my_volume_test.stdout
+#    - name: Create Policy 
+#    - name: Run Benchmarks on SSD
+#    - name: Run Benchmarks on HDD
+#    - name: Collect and Upload Data 
+#
