@@ -1,0 +1,25 @@
+[global]
+directory=/quobyte/benchvolume
+##filename_format=$jobnum/$jobname-{{ inventory_hostname }}-$filenum
+filename_format=testjob_fileout
+rw=read
+kb_base=1000
+ioengine=libaio
+iodepth=32
+log_unix_epoch=1
+
+[job-seq-read-64Mi]
+description=test_job
+per_job_logs=0
+nrfiles=1
+openfiles=1
+size=10G
+numjobs=1
+direct=0
+bs=64Mi
+create_on_open=1
+unlink=0
+allow_file_create=1
+fallocate=none
+stonewall
+
